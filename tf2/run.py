@@ -362,8 +362,9 @@ def perform_evaluation(model, builder, eval_steps, ckpt, strategy, topology):
         'eval/label_top_1_accuracy')
     label_top_5_accuracy = tf.keras.metrics.TopKCategoricalAccuracy(
         5, 'eval/label_top_5_accuracy')
+    label_binary_accruacy = tf.keras.metrics.Mean('eval/binary_accuracy')
     all_metrics = [
-        regularization_loss, label_top_1_accuracy, label_top_5_accuracy
+        regularization_loss, label_top_1_accuracy, label_top_5_accuracy, label_binary_accruacy
     ]
 
     # Restore checkpoint.
@@ -380,7 +381,7 @@ def perform_evaluation(model, builder, eval_steps, ckpt, strategy, topology):
     outputs = supervised_head_outputs
     l = labels['labels']
     metrics.update_finetune_metrics_eval(label_top_1_accuracy,
-                                         label_top_5_accuracy, outputs, l)
+                                         label_top_5_accuracy, label_binary_accruacy, outputs, l)
     reg_loss = model_lib.add_weight_decay(model, adjust_per_optimizer=True)
     regularization_loss.update_state(reg_loss)
 
