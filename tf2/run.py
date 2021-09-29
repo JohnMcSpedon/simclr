@@ -19,17 +19,16 @@ import json
 import math
 import os
 
+import tensorflow.compat.v2 as tf
+import tensorflow_datasets as tfds
 from absl import app
 from absl import flags
 from absl import logging
+
 import data as data_lib
 import metrics
 import model as model_lib
 import objective as obj_lib
-import tensorflow.compat.v2 as tf
-import tensorflow_datasets as tfds
-
-
 
 FLAGS = flags.FLAGS
 
@@ -374,7 +373,7 @@ def perform_evaluation(model, builder, eval_steps, ckpt, strategy, topology):
     global_step = checkpoint.global_step
     logging.info('Performing eval at step %d', global_step.numpy())
 
-  def single_step(features, labels):
+  def single_step(features, labels, sample_id):
     _, supervised_head_outputs = model(features, training=False)
     assert supervised_head_outputs is not None
     outputs = supervised_head_outputs
@@ -383,14 +382,15 @@ def perform_evaluation(model, builder, eval_steps, ckpt, strategy, topology):
                                          label_top_5_accuracy, outputs, l)
     reg_loss = model_lib.add_weight_decay(model, adjust_per_optimizer=True)
     regularization_loss.update_state(reg_loss)
+    return sample_id
 
   with strategy.scope():
 
     @tf.function
     def run_single_step(iterator):
-      images, labels = next(iterator)
+      images, labels, sample_id = next(iterator)
       features, labels = images, {'labels': labels}
-      strategy.run(single_step, (features, labels))
+      strategy.run(single_step, (features, labels, sample_id))
 
     iterator = iter(ds)
     for i in range(eval_steps):

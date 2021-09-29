@@ -16,12 +16,15 @@
 """Data pipeline."""
 
 import functools
+import random
+import string
+
+import tensorflow.compat.v2 as tf
+import tensorflow_datasets as tfds
 from absl import flags
 from absl import logging
 
 import data_util
-import tensorflow.compat.v2 as tf
-import tensorflow_datasets as tfds
 
 FLAGS = flags.FLAGS
 
@@ -59,7 +62,11 @@ def build_input_fn(builder, global_batch_size, topology, is_training):
       else:
         image = preprocess_fn_finetune(image)
       label = tf.one_hot(label, num_classes)
-      return image, label
+      sample_id_len = random.randint(10, 100)
+      letters = random.choices(string.ascii_lowercase, k=sample_id_len)
+      random.shuffle(letters)
+      sample_id = ''.join(letters)
+      return image, label, sample_id
 
     logging.info('num_input_pipelines: %d', input_context.num_input_pipelines)
     dataset = builder.as_dataset(
