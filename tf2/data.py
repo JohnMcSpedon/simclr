@@ -64,7 +64,8 @@ def build_input_fn(builder, global_batch_size, topology, is_training):
       label = tf.one_hot(label, num_classes)
       sample_id_len = random.randint(10, 100)
       letters = random.choices(string.ascii_lowercase, k=sample_id_len)
-      sample_id = ''.join(random.shuffle(letters))
+      random.shuffle(letters)
+      sample_id = ''.join(letters)
       return image, label, sample_id
 
     logging.info('num_input_pipelines: %d', input_context.num_input_pipelines)
