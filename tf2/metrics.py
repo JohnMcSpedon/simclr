@@ -56,10 +56,15 @@ def update_finetune_metrics_train(supervised_loss_metric, supervised_acc_metric,
 
 
 def update_finetune_metrics_eval(label_top_1_accuracy_metrics,
-                                 label_top_5_accuracy_metrics, outputs, labels):
+                                 label_top_5_accuracy_metrics,
+                                 label_binary_accruacy, outputs, labels):
   label_top_1_accuracy_metrics.update_state(
       tf.argmax(labels, 1), tf.argmax(outputs, axis=1))
   label_top_5_accuracy_metrics.update_state(labels, outputs)
+
+  binary_accuracy = tf.keras.metrics.binary_accuracy(tf.cast(labels, tf.float32), outputs)  # threshold = 0.5
+  binary_accuracy = tf.reduce_mean(binary_accuracy)
+  label_binary_accruacy.update_state(binary_accuracy)
 
 
 def _float_metric_value(metric):
